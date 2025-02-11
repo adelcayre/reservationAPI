@@ -1,0 +1,367 @@
+openapi: 3.0.0
+info:
+  title: Pop-Up Restaurant Reservations API
+  description: API for managing event reservations, tables, and guests
+  version: 1.0.0
+servers:
+  - url: https://api.example.com
+paths:
+
+  /events:
+    get:
+      summary: Get all events
+      responses:
+        '200':
+          description: List of events
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  type: object
+                  properties:
+                    id:
+                      type: integer
+                    title:
+                      type: string
+                    dateTime:
+                      type: string
+
+    post:
+      summary: Create a new event (Admin only)
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                title:
+                  type: string
+                dateTime:
+                  type: string
+      responses:
+        '201':
+          description: Event created
+        '400':
+          description: Bad Request - invalid info
+
+  /events/{eventName}:
+    get:
+      summary: Get event details
+      parameters:
+        - name: eventName
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: Event details
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  type: object
+                  properties:
+                    id:
+                      type: integer
+                    title:
+                      type: string
+                    dateTime:
+                      type: string
+                    tables:
+                      type: array
+                      items:
+                        $ref: '#/components/schemas/Table'
+        '404':
+          description: Not found
+
+    delete:
+      summary: Delete an event (Admin only)
+      security:
+        - BearerAuth: [ ]  # Requires JWT authentication
+      parameters:
+        - name: eventName
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        '204':
+          description: Event deleted
+        '404':
+          description: Not found
+
+  /events/{eventName}/tables:
+    post:
+      summary: Create a table (Admin only)
+      parameters:
+        - name: eventName
+          in: path
+          required: true
+          schema:
+            type: string
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                capacity:
+                  type: integer      
+      responses:
+        '201':
+          description: Table created
+        '404':
+          description: Not found
+
+    delete:
+      summary: Delete a table (Admin only)
+      parameters:
+        - name: eventName
+          in: path
+          required: true
+          schema:
+            type: string
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                tableId:
+                  type: integer
+      responses:
+        '200':
+          description: Table deleted
+        '404':
+          description: Not found
+
+  /events/{eventName}/register:
+    post:
+      summary: Register for an event (Guest)
+      parameters:
+        - name: eventName
+          in: path
+          required: true
+          schema:
+            type: string
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                email:
+                  type: string
+                name:
+                  type: string
+                password:
+                  type: string
+      responses:
+        '201':
+          description: Guest registered
+        '403':
+          description: Forbidden - Invalid signup
+        '404':
+          description: Not found
+
+  /events/{eventName}/login:
+    post:
+      summary: Login for an event (Guests and Hosts)
+      parameters:
+        - name: eventName
+          in: path
+          required: true
+          schema:
+            type: string
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                email:
+                  type: string
+                name:
+                  type: string
+                password:
+                  type: string
+      responses:
+        '201':
+          description: Guest registered
+        '403':
+          description: Forbidden - Invalid signup
+        '404':
+          description: Not found
+
+
+  /events/{eventName}/tables/{tableId}/claim:
+    post:
+      summary: Claim a table as a host
+      security:
+        - BearerAuth: [ ]  # Requires JWT authentication
+      parameters:
+        - name: eventName
+          in: path
+          required: true
+          schema:
+            type: string
+        - name: tableId
+          in: path
+          required: true
+          schema:
+            type: string
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                password:
+                  type: string
+                  description: The table password required to join it
+      responses:
+        '200':
+          description: Table claimed successfully
+        '401':
+          description: Unauthorized - JWT token is missing or invalid
+        '403':
+          description: Forbidden - User is not allowed to claim this table
+        '404':
+          description: Not found
+
+
+
+  /events/{eventName}/tables/{tableId}/join:
+    post:
+      summary: Join a table as guest
+      security:
+        - BearerAuth: [ ]  # Requires JWT authentication
+      parameters:
+        - name: eventName
+          in: path
+          required: true
+          schema:
+            type: string
+        - name: tableId
+          in: path
+          required: true
+          schema:
+            type: string
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                password:
+                  type: string
+      responses:
+          '200':
+            description: Table joined
+          '401':
+            description: Unauthorized - JWT token is missing or invalid
+          '403':
+            description: Forbidden - Incorrect password for table or table not yet claimed
+          '404':
+            description: Not found
+          '409':
+            description: Conflict - Table is full.
+
+
+  /events/{eventName}/tables/{tableId}/password:
+    put:
+      summary: Change table password (Host only)
+      security:
+        - BearerAuth: [ ]  # Requires JWT authentication
+      parameters:
+        - name: eventName
+          in: path
+          required: true
+          schema:
+            type: string
+        - name: tableId
+          in: path
+          required: true
+          schema:
+            type: string
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                newPassword:
+                  type: string
+      responses:
+        '200':
+          description: Table password updated
+        '400':
+          description: Invalid password submission
+        '403':
+          description: Forbidden - User is not allowed to change password
+
+
+  /events/{eventName}/tables/{tableId}/guests/{guestId}:
+    delete:
+      summary: Remove a guest from table (Self, Host or Admin only)
+      security:
+        - BearerAuth: [ ]  # Requires JWT authentication
+      parameters:
+        - name: eventName
+          in: path
+          required: true
+          schema:
+            type: string
+        - name: tableId
+          in: path
+          required: true
+          schema:
+            type: string
+        - name: guestId
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        '204':
+          description: Guest removed
+        '404':
+          description: Guest not found
+components:
+  securitySchemes:
+    BearerAuth:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT
+  schemas:
+    Table:
+      type: object
+      properties:
+        tableId:
+          type: integer
+          description: The unique identifier for the table.
+        capacity:
+          type: integer
+          description: The maximum number of guests the table can accommodate.
+        resId:
+          type: string
+          description: The reservation ID of the host for this table.
+        guests:
+          type: array
+          items:
+            type: string
+          description: List of guests at the table
+      required:
+        - tableId
+        - capacity
