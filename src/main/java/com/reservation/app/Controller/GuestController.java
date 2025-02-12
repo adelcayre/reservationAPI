@@ -1,5 +1,6 @@
 package com.reservation.app.Controller;
-
+/**
+import com.reservation.app.Data.Guest;
 import org.springframework.web.bind.annotation.*;
 
 @RestController
@@ -16,3 +17,4 @@ public class GuestController {
         // Code to login a guest/host
     }
 }
+ */

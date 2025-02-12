@@ -1,5 +1,8 @@
 package com.reservation.app.Data;
 import jakarta.persistence.*;
+
+import java.sql.Date;
+import java.time.LocalDateTime;
 import java.util.List;
 
 @Entity
@@ -7,11 +10,14 @@ public class Event {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
-    private Long id; // The primary key for the Event table
+    private Long id;
 
-    private String title; // The title of the event
+    @Column(unique=true, nullable = false)
+    private String title;
 
-    private String dateTime; // The date and time of the event
+    private LocalDateTime dateTime;
+
+    private String description;
 
     @OneToMany(mappedBy = "event")
     private List<Table> tables;
@@ -20,7 +26,7 @@ public class Event {
 
     public Event() {}
 
-    public Event(String title, String dateTime) {
+    public Event(String title, LocalDateTime dateTime) {
         this.title = title;
         this.dateTime = dateTime;
     }
@@ -41,12 +47,20 @@ public class Event {
         this.title = title;
     }
 
-    public String getDateTime() {
+    public LocalDateTime getDateTime() {
         return dateTime;
     }
 
-    public void setDateTime(String dateTime) {
+    public void setDateTime(LocalDateTime dateTime) {
         this.dateTime = dateTime;
+    }
+
+    public String getDescription() {
+        return description;
+    }
+
+    public void setDescription(String description) {
+        this.description = description;
     }
 
     public List<Table> getTables() {

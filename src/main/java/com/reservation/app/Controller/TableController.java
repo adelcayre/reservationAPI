@@ -1,14 +1,17 @@
 package com.reservation.app.Controller;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
-
+/**
 @RestController
 @RequestMapping("/events/{eventName}/tables")
 public class TableController {
 
+
+
     @PostMapping
     @PreAuthorize("hasRole('ADMIN')")
     public ResponseEntity<Table> createTable(@PathVariable String eventName, @RequestBody Table table) {
-        // Code to create a table for a specific event
+
     }
 
     @DeleteMapping
@@ -40,3 +43,4 @@ public class TableController {
         // Code to remove a guest from a table
     }
 }
+*/
